@@ -86,7 +86,6 @@ pipeline {
     agent any
 
     environment {
-        // Keeps your image name consistent across all stages
         DOCKER_IMAGE = 'damars4/my-web-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
@@ -111,14 +110,13 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building the project..."
-                bat 'dir'   // Windows agent
+                bat 'dir'
             }
         }
 
         stage('Test') {
             steps {
                 echo "Running tests..."
-                // Add actual test commands here later (e.g., npm test)
             }
         }
 
@@ -131,9 +129,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // We stick with your TCP config if that is how your Docker Desktop is set up
                     docker.withServer('tcp://localhost:2375') {
-                        // Notice I added the tag to the build command to be safe
                         def dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
                         
                         docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
@@ -146,8 +142,6 @@ pipeline {
 
         stage('Deploy to Local Docker Host') {
             steps {
-                // FIXED: Used %DOCKER_IMAGE% variable instead of "username/..."
-                // Added logic to stop the container only if it is actually running to prevent errors
                 bat """
                     docker stop my-web-app || echo "Container not running..."
                     docker rm -f my-web-app || echo "No container to remove..."
@@ -162,8 +156,9 @@ pipeline {
             echo "Pipeline completed successfully!"
         }
         failure {
-            echo "Pipeline failed Check logs."
+            echo "Pipeline failed. Check logs."
         }
     }
-} this is my codes
+}
+
 
